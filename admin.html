@@ -1170,9 +1170,11 @@
     <div class="notification" id="notification"></div>
 
     <script>
-        // Supabase Configuration
+        // ====================== SUPABASE CONFIGURATION ======================
+        // আপনার Supabase প্রজেক্টের details এখানে দিন
         const SUPABASE_URL = 'https://qsvuzobizalcgqnlxuqv.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_mbhqaW7EzLccLp3gNjNy1g_ncCb4uvN';
+        // ====================================================================
         
         // Initialize Supabase
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1408,10 +1410,38 @@
                 updateAllEntries();
                 loadHistory();
                 
+                // Setup realtime subscription
+                setupRealtime();
+                
             } catch (error) {
                 console.error('Error loading data:', error);
                 showNotification('ডাটা লোড করতে সমস্যা হয়েছে', 'error');
             }
+        }
+
+        // Setup Realtime Subscription
+        function setupRealtime() {
+            const channel = supabase
+                .channel('entries-changes')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'entries' }, 
+                    () => {
+                        loadAllData(); // Reload data on change
+                    }
+                )
+                .on('postgres_changes',
+                    { event: '*', schema: 'public', table: 'offers' },
+                    () => {
+                        loadOffers(); // Reload offers on change
+                    }
+                )
+                .on('postgres_changes',
+                    { event: '*', schema: 'public', table: 'payments' },
+                    () => {
+                        loadPayments(); // Reload payments on change
+                    }
+                )
+                .subscribe();
         }
 
         // Update Recent Entries
